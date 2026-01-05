@@ -4323,6 +4323,24 @@ def main() -> int:
 
     iExitCode: int = 0
     for pszInputManhourCsvPath in objArgs.pszInputManhourCsvPaths:
+        if re.match(
+            r".*工数_\d{4}年\d{2}月_step10_各プロジェクトの工数\.tsv$",
+            pszInputManhourCsvPath,
+        ):
+            try:
+                iResultStep10Only: int = write_step11_from_step10_only(pszInputManhourCsvPath)
+            except Exception as objException:
+                print(
+                    "Error: failed to process step10 TSV input: {0}. Detail = {1}".format(
+                        pszInputManhourCsvPath,
+                        objException,
+                    )
+                )
+                iExitCode = 1
+                continue
+            if iResultStep10Only != 0:
+                iExitCode = 1
+            continue
         try:
             iResult: int = process_single_input(pszInputManhourCsvPath)
         except Exception as objException:

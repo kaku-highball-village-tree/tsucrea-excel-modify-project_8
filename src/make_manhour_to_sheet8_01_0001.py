@@ -4133,6 +4133,7 @@ def process_single_input(pszInputManhourCsvPath: str) -> int:
             pszSecondIncubation: str = pszZeroManhour
             pszThirdIncubation: str = pszZeroManhour
             pszFourthIncubation: str = pszZeroManhour
+            pszBusinessDevelopment: str = pszZeroManhour
             bIsCompanyProject: bool = re.match(r"^C\d{3}_", str(pszProjectName)) is not None
             if not bIsCompanyProject:
                 if pszCompanyName == "第一インキュ":
@@ -4143,6 +4144,8 @@ def process_single_input(pszInputManhourCsvPath: str) -> int:
                     pszThirdIncubation = pszTotalManhour
                 elif pszCompanyName == "第四インキュ":
                     pszFourthIncubation = pszTotalManhour
+                elif pszCompanyName == "事業開発":
+                    pszBusinessDevelopment = pszTotalManhour
             objStep11CompanyFile.write(
                 pszProjectName
                 + "\t"
@@ -4157,6 +4160,8 @@ def process_single_input(pszInputManhourCsvPath: str) -> int:
                 + pszThirdIncubation
                 + "\t"
                 + pszFourthIncubation
+                + "\t"
+                + pszBusinessDevelopment
                 + "\n"
             )
 
@@ -4316,8 +4321,52 @@ def main() -> int:
 
     convert_org_table_tsv(Path(__file__).resolve().parent)
 
-    iExitCode: int = 0
+    objStep10Inputs: List[str] = []
+    objCsvInputs: List[str] = []
+
     for pszInputManhourCsvPath in objArgs.pszInputManhourCsvPaths:
+        if re.match(
+            r".*工数_\d{4}年\d{2}月_step10_各プロジェクトの工数\.tsv$",
+            pszInputManhourCsvPath,
+        ):
+            objStep10Inputs.append(pszInputManhourCsvPath)
+            continue
+        if pszInputManhourCsvPath.lower().endswith(".csv"):
+            objCsvInputs.append(pszInputManhourCsvPath)
+            continue
+        print(
+            "Error: 入力ファイル形式が不正です: {0}. CSV または Step10 TSV のみ指定してください。".format(
+                pszInputManhourCsvPath,
+            )
+        )
+        return 1
+
+    if objStep10Inputs:
+        if objCsvInputs:
+            print("Error: CSV と TSV を混在させて実行することはできません。CSV は CSV だけ、TSV は TSV だけで指定してください。")
+            return 1
+        if len(objStep10Inputs) != 1:
+            print("Error: Step10 TSV は単一ファイルのみ指定してください。")
+            return 1
+        pszStep10Input: str = objStep10Inputs[0]
+        try:
+            iResultStep10Only: int = write_step11_from_step10_only(pszStep10Input)
+        except Exception as objException:
+            print(
+                "Error: failed to process step10 TSV input: {0}. Detail = {1}".format(
+                    pszStep10Input,
+                    objException,
+                )
+            )
+            return 1
+        return 0 if iResultStep10Only == 0 else 1
+
+    if not objCsvInputs:
+        print("Error: 入力ファイルが指定されていません。CSV または Step10 TSV を指定してください。")
+        return 1
+
+    iExitCode: int = 0
+    for pszInputManhourCsvPath in objCsvInputs:
         try:
             iResult: int = process_single_input(pszInputManhourCsvPath)
         except Exception as objException:

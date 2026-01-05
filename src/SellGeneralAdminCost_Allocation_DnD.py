@@ -589,31 +589,32 @@ def window_proc(
             run_manhour_csv_to_sheet(objManhourCsvFiles)
             return 0
 
-        if objStep10TsvFiles:
-            if not bAllStep10Tsv:
+        if objStep10TsvFiles and not objCsvFiles:
+            if bAllStep10Tsv and not objManhourCsvFiles:
+                objYearMonths: List[str] = []
+                for pszFilePath in objStep10TsvFiles:
+                    pszYearMonth = parse_year_month_from_name(os.path.basename(pszFilePath))
+                    if pszYearMonth is None:
+                        pszErrorMessage = (
+                            "Error: Step10 TSV のファイル名が不正です。"
+                            " 工数_yyyy年mm月_step10_各プロジェクトの工数.tsv を単独で指定してください。"
+                        )
+                        show_error_message_box(pszErrorMessage, "SellGeneralAdminCost_Allocation_DnD")
+                        return 0
+                    objYearMonths.append(pszYearMonth)
+                if len(set(objYearMonths)) != 1:
+                    pszErrorMessage = "Error: Step10 TSV は同一の年月で1件のみ指定してください。"
+                    show_error_message_box(pszErrorMessage, "SellGeneralAdminCost_Allocation_DnD")
+                    return 0
+                run_manhour_csv_to_sheet(objStep10TsvFiles)
+                return 0
+            if not bAllStep10Tsv and not objManhourCsvFiles:
                 pszErrorMessage = (
                     "Error: Step10 TSV のみを指定してください。"
                     " 工数_yyyy年mm月_step10_各プロジェクトの工数.tsv を単独でドラッグ＆ドロップしてください。"
                 )
                 show_error_message_box(pszErrorMessage, "SellGeneralAdminCost_Allocation_DnD")
                 return 0
-            objYearMonths: List[str] = []
-            for pszFilePath in objStep10TsvFiles:
-                pszYearMonth = parse_year_month_from_name(os.path.basename(pszFilePath))
-                if pszYearMonth is None:
-                    pszErrorMessage = (
-                        "Error: Step10 TSV のファイル名が不正です。"
-                        " 工数_yyyy年mm月_step10_各プロジェクトの工数.tsv を単独で指定してください。"
-                    )
-                    show_error_message_box(pszErrorMessage, "SellGeneralAdminCost_Allocation_DnD")
-                    return 0
-                objYearMonths.append(pszYearMonth)
-            if len(set(objYearMonths)) != 1:
-                pszErrorMessage = "Error: Step10 TSV は同一の年月で1件のみ指定してください。"
-                show_error_message_box(pszErrorMessage, "SellGeneralAdminCost_Allocation_DnD")
-                return 0
-            run_manhour_csv_to_sheet(objStep10TsvFiles)
-            return 0
 
         objPairs = collect_valid_pairs(objFiles)
         objPairs = select_consecutive_pairs(objPairs)

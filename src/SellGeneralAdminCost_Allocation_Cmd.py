@@ -1732,10 +1732,35 @@ def main(argv: list[str]) -> int:
         print_usage()
         return 1
 
-    if len(argv) == 4:
-        objPairs: List[List[str]] = [[argv[1], argv[2], argv[3]]]
+    objCsvInputs: List[str] = [pszPath for pszPath in argv[1:] if pszPath.lower().endswith(".csv")]
+    objTsvInputs: List[str] = [pszPath for pszPath in argv[1:] if pszPath.lower().endswith(".tsv")]
+
+    if objCsvInputs and objTsvInputs:
+        print(
+            "Error: CSV と TSV を混在させて実行することはできません。"
+            " CSV は CSV だけでドラッグ＆ドロップしてください。"
+            " TSV は TSV だけでドラッグ＆ドロップしてください。"
+        )
+        return 1
+
+    if objCsvInputs and not objTsvInputs:
+        print(
+            "Error: 本スクリプトは TSV 専用です。CSV は CSV だけでドラッグ＆ドロップしてください。"
+            " TSV を扱う場合は TSV のみを指定してください。"
+        )
+        print_usage()
+        return 1
+
+    objArgv: list[str] = [argv[0]] + (objTsvInputs if objTsvInputs else argv[1:])
+
+    if len(objArgv) < 3:
+        print_usage()
+        return 1
+
+    if len(objArgv) == 4:
+        objPairs: List[List[str]] = [[objArgv[1], objArgv[2], objArgv[3]]]
     else:
-        iArgCount: int = len(argv) - 1
+        iArgCount: int = len(objArgv) - 1
         if iArgCount % 2 != 0:
             print_usage()
             return 1
@@ -1744,7 +1769,7 @@ def main(argv: list[str]) -> int:
         objPlCandidates: List[str] = []
         bGroupedOrder: bool = True
         bSeenPl: bool = False
-        for pszCandidate in argv[1:]:
+        for pszCandidate in objArgv[1:]:
             pszBaseName: str = os.path.basename(pszCandidate)
             if pszBaseName.startswith("工数_"):
                 if bSeenPl:
@@ -1768,11 +1793,11 @@ def main(argv: list[str]) -> int:
             for iIndex in range(len(objManhourCandidates)):
                 objPairs.append([objManhourCandidates[iIndex], objPlCandidates[iIndex]])
         else:
-            for iIndex in range(1, len(argv), 2):
-                if iIndex + 1 >= len(argv):
+            for iIndex in range(1, len(objArgv), 2):
+                if iIndex + 1 >= len(objArgv):
                     print_usage()
                     return 1
-                objPairs.append([argv[iIndex], argv[iIndex + 1]])
+                objPairs.append([objArgv[iIndex], objArgv[iIndex + 1]])
 
     for objPair in objPairs:
         pszManhourPath: str = objPair[0]

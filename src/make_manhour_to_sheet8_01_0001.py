@@ -4094,7 +4094,7 @@ def process_single_input(pszInputManhourCsvPath: str) -> int:
     )
     pszStep11CompanyOutputPath: str = str(
         objBaseDirectoryPath
-        / f"工数{iFileYear}年{iFileMonth:02d}月_step11_各プロジェクトの計上カンパニー名_工数_カンパニーの工数.tsv"
+        / f"工数_{iFileYear}年{iFileMonth:02d}月_step11_各プロジェクトの計上カンパニー名_工数_カンパニーの工数.tsv"
     )
     with open(pszStep10OutputPath, "w", encoding="utf-8") as objStep10File:
         for _, (pszProjectName, pszTotalManhour) in objIndexedSheet11Rows:
@@ -4218,7 +4218,7 @@ def write_step11_from_step10_only(pszStep10Path: str) -> int:
     iFileYear: int = int(objMatch.group(1))
     iFileMonth: int = int(objMatch.group(2))
 
-    pszStep11OutputPath: Path = objBaseDirectoryPath / f"工数{iFileYear}年{iFileMonth:02d}月_step11_各プロジェクトの計上カンパニー名_工数_カンパニーの工数.tsv"
+    pszStep11OutputPath: Path = objBaseDirectoryPath / f"工数_{iFileYear}年{iFileMonth:02d}月_step11_各プロジェクトの計上カンパニー名_工数_カンパニーの工数.tsv"
     objBillingMap: Dict[str, str] = load_org_table_billing_map_for_step11()
 
     with open(objStep10Path, "r", encoding="utf-8") as objStep10File, open(
